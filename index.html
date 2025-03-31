@@ -26,12 +26,6 @@
             max-height: 300px;
             overflow-y: auto;
         }
-        #shop-container {
-            margin-top: 20px;
-            padding: 10px;
-            border: 2px solid black;
-            background-color: lightyellow;
-        }
         button {
             padding: 10px 15px;
             font-size: 16px;
@@ -50,7 +44,7 @@
         }
     </style>
 </head>
-<body onload="loadGameData()">
+<body>
     <div id="header">
         <h1>RNG Dice Roll Game</h1>
         <button onclick="rollDice()">Roll</button>
@@ -107,32 +101,35 @@
         function rollDice() {
             let rand = Math.random();
             let accumulated = 0;
-            let rarity = rarities[0];
-            
-            for (let r of rarities) {
-                accumulated += r.chance;
-                if (rand < accumulated) {
-                    rarity = r;
+            let selectedRarity = null;
+
+            for (let rarity of rarities) {
+                accumulated += rarity.chance;
+                if (rand <= accumulated) {
+                    selectedRarity = rarity;
                     break;
                 }
             }
 
-            rngCoins += rarity.coins;
-            rollLog.push(rarity.name);
-            localStorage.setItem("rollLog", JSON.stringify(rollLog));
-            localStorage.setItem("rngCoins", rngCoins);
-            updateDisplay(rarity);
+            if (selectedRarity) {
+                rngCoins += selectedRarity.coins;
+                rollLog.push(selectedRarity.name);
+                localStorage.setItem("rollLog", JSON.stringify(rollLog));
+                localStorage.setItem("rngCoins", rngCoins);
+                updateDisplay(selectedRarity);
+            }
         }
 
         function updateDisplay(rarity) {
             document.getElementById("coins").innerText = `RNG Coins: ${rngCoins}`;
             document.getElementById("last-roll").innerText = `Last Roll: ${rarity.name}`;
+
             let logList = document.getElementById("log-list");
             let newEntry = document.createElement("li");
             newEntry.innerText = `Rolled: ${rarity.name}`;
             logList.prepend(newEntry);
 
-            // Ensure the body color updates correctly
+            // Background color fix
             document.body.style.backgroundColor = rarity.color;
         }
 
@@ -148,3 +145,4 @@
     </script>
 </body>
 </html>
+
