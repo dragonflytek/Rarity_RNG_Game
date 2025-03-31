@@ -8,13 +8,18 @@
         body {
             font-family: Arial, sans-serif;
             display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            transition: background-color 1s ease;
+            flex-direction: column;
+            align-items: center;
+            transition: background-color 0.5s ease;
         }
         #header {
             text-align: center;
             width: 100%;
+        }
+        #main-container {
+            display: flex;
+            justify-content: space-between;
+            width: 90%;
         }
         #left-container, #right-container {
             width: 45%;
@@ -32,19 +37,14 @@
             margin: 5px;
             cursor: pointer;
         }
-        #coins {
-            font-size: 22px;
+        #coins, #last-roll {
+            font-size: 20px;
             font-weight: bold;
             margin-top: 10px;
         }
-        #last-roll {
-            font-size: 18px;
-            font-weight: bold;
-            margin-top: 5px;
-        }
     </style>
 </head>
-<body>
+<body onload="loadGameData()">
     <div id="header">
         <h1>RNG Dice Roll Game</h1>
         <button onclick="rollDice()">Roll</button>
@@ -52,29 +52,31 @@
         <p id="last-roll">Last Roll: None</p>
     </div>
 
-    <div id="left-container">
-        <div id="log-container">
-            <p><strong>Roll Log:</strong></p>
-            <ul id="log-list"></ul>
+    <div id="main-container">
+        <div id="left-container">
+            <div id="log-container">
+                <p><strong>Roll Log:</strong></p>
+                <ul id="log-list"></ul>
+            </div>
         </div>
-    </div>
 
-    <div id="right-container">
-        <h2>Rarities and Chances:</h2>
-        <p><strong>Common:</strong> 50% - 1 RNG Coin</p>
-        <p><strong>Uncommon:</strong> 25% - 5 RNG Coins</p>
-        <p><strong>Rare:</strong> 15% - 10 RNG Coins</p>
-        <p><strong>Epic:</strong> 10% - 20 RNG Coins</p>
-        <p><strong>Legendary:</strong> 7% - 50 RNG Coins</p>
-        <p><strong>Mythical:</strong> 5% - 100 RNG Coins</p>
-        <p><strong>Divine:</strong> 3% - 200 RNG Coins</p>
-        <p><strong>Transcendent:</strong> 1% - 300 RNG Coins</p>
-        <p><strong>Celestial:</strong> 0.5% - 500 RNG Coins</p>
-        <p><strong>Cosmic:</strong> 0.3% - 700 RNG Coins</p>
-        <p><strong>Astral:</strong> 0.1% - 1000 RNG Coins</p>
-        <p><strong>Ethereal:</strong> 0.05% - 1500 RNG Coins</p>
-        <p><strong>Omnipotent:</strong> 0.02% - 2000 RNG Coins</p>
-        <p><strong>Beyond Reality:</strong> 0.001% - 5000 RNG Coins</p>
+        <div id="right-container">
+            <h2>Rarities and Chances:</h2>
+            <p><strong>Common:</strong> 50% - 1 RNG Coin</p>
+            <p><strong>Uncommon:</strong> 25% - 5 RNG Coins</p>
+            <p><strong>Rare:</strong> 15% - 10 RNG Coins</p>
+            <p><strong>Epic:</strong> 10% - 20 RNG Coins</p>
+            <p><strong>Legendary:</strong> 7% - 50 RNG Coins</p>
+            <p><strong>Mythical:</strong> 5% - 100 RNG Coins</p>
+            <p><strong>Divine:</strong> 3% - 200 RNG Coins</p>
+            <p><strong>Transcendent:</strong> 1% - 300 RNG Coins</p>
+            <p><strong>Celestial:</strong> 0.5% - 500 RNG Coins</p>
+            <p><strong>Cosmic:</strong> 0.3% - 700 RNG Coins</p>
+            <p><strong>Astral:</strong> 0.1% - 1000 RNG Coins</p>
+            <p><strong>Ethereal:</strong> 0.05% - 1500 RNG Coins</p>
+            <p><strong>Omnipotent:</strong> 0.02% - 2000 RNG Coins</p>
+            <p><strong>Beyond Reality:</strong> 0.001% - 5000 RNG Coins</p>
+        </div>
     </div>
 
     <script>
@@ -101,36 +103,31 @@
         function rollDice() {
             let rand = Math.random();
             let accumulated = 0;
-            let selectedRarity = null;
-
-            for (let rarity of rarities) {
-                accumulated += rarity.chance;
-                if (rand <= accumulated) {
-                    selectedRarity = rarity;
+            let rarity;
+            
+            for (let r of rarities) {
+                accumulated += r.chance;
+                if (rand < accumulated) {
+                    rarity = r;
                     break;
                 }
             }
-
-            if (selectedRarity) {
-                rngCoins += selectedRarity.coins;
-                rollLog.push(selectedRarity.name);
-                localStorage.setItem("rollLog", JSON.stringify(rollLog));
-                localStorage.setItem("rngCoins", rngCoins);
-                updateDisplay(selectedRarity);
-            }
+            
+            rngCoins += rarity.coins;
+            rollLog.push(rarity.name);
+            localStorage.setItem("rollLog", JSON.stringify(rollLog));
+            localStorage.setItem("rngCoins", rngCoins);
+            updateDisplay(rarity);
         }
 
         function updateDisplay(rarity) {
             document.getElementById("coins").innerText = `RNG Coins: ${rngCoins}`;
             document.getElementById("last-roll").innerText = `Last Roll: ${rarity.name}`;
-
+            document.body.style.backgroundColor = rarity.color;
             let logList = document.getElementById("log-list");
             let newEntry = document.createElement("li");
             newEntry.innerText = `Rolled: ${rarity.name}`;
             logList.prepend(newEntry);
-
-            // Background color fix
-            document.body.style.backgroundColor = rarity.color;
         }
 
         window.onload = function () {
@@ -145,3 +142,4 @@
     </script>
 </body>
 </html>
+
