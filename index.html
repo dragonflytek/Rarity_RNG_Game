@@ -76,6 +76,10 @@
             <p><strong>Ethereal:</strong> 0.05% - 1500 RNG Coins</p>
             <p><strong>Omnipotent:</strong> 0.02% - 2000 RNG Coins</p>
             <p><strong>Beyond Reality:</strong> 0.001% - 5000 RNG Coins</p>
+
+            <h2>Shop</h2>
+            <button onclick="buyLuckUpgrade()">Buy Luck Upgrade (100 RNG Coins)</button>
+            <p id="luck-level">Luck Level: 1</p>
         </div>
     </div>
 
@@ -97,11 +101,11 @@
             { name: "Beyond Reality", chance: 0.00001, coins: 5000, color: "black" }
         ];
 
-        let rollLog = JSON.parse(localStorage.getItem("rollLog")) || [];
         let rngCoins = parseInt(localStorage.getItem("rngCoins")) || 0;
+        let luckLevel = parseInt(localStorage.getItem("luckLevel")) || 1;
 
         function rollDice() {
-            let rand = Math.random();
+            let rand = Math.random() * luckLevel;
             let accumulated = 0;
             let rarity;
             
@@ -114,8 +118,6 @@
             }
             
             rngCoins += rarity.coins;
-            rollLog.push(rarity.name);
-            localStorage.setItem("rollLog", JSON.stringify(rollLog));
             localStorage.setItem("rngCoins", rngCoins);
             updateDisplay(rarity);
         }
@@ -124,22 +126,20 @@
             document.getElementById("coins").innerText = `RNG Coins: ${rngCoins}`;
             document.getElementById("last-roll").innerText = `Last Roll: ${rarity.name}`;
             document.body.style.backgroundColor = rarity.color;
-            let logList = document.getElementById("log-list");
-            let newEntry = document.createElement("li");
-            newEntry.innerText = `Rolled: ${rarity.name}`;
-            logList.prepend(newEntry);
         }
 
-        window.onload = function () {
-            document.getElementById("coins").innerText = `RNG Coins: ${rngCoins}`;
-            let logList = document.getElementById("log-list");
-            rollLog.forEach(entry => {
-                let newEntry = document.createElement("li");
-                newEntry.innerText = `Rolled: ${entry}`;
-                logList.prepend(newEntry);
-            });
-        };
+        function buyLuckUpgrade() {
+            if (rngCoins >= 100) {
+                rngCoins -= 100;
+                luckLevel += 1;
+                localStorage.setItem("rngCoins", rngCoins);
+                localStorage.setItem("luckLevel", luckLevel);
+                document.getElementById("luck-level").innerText = `Luck Level: ${luckLevel}`;
+                document.getElementById("coins").innerText = `RNG Coins: ${rngCoins}`;
+            } else {
+                alert("Not enough RNG Coins!");
+            }
+        }
     </script>
 </body>
 </html>
-
