@@ -20,9 +20,10 @@
             display: flex;
             justify-content: space-between;
             width: 90%;
+            margin-top: 20px;
         }
         #left-container, #right-container {
-            width: 45%;
+            width: 30%;
         }
         #log-container {
             border: 2px solid black;
@@ -30,6 +31,12 @@
             background-color: lightgray;
             max-height: 300px;
             overflow-y: auto;
+        }
+        #shop {
+            margin-top: 20px;
+            border: 2px solid black;
+            padding: 10px;
+            background-color: #f0f0f0;
         }
         button {
             padding: 10px 15px;
@@ -77,9 +84,11 @@
             <p><strong>Omnipotent:</strong> 0.02% - 2000 RNG Coins</p>
             <p><strong>Beyond Reality:</strong> 0.001% - 5000 RNG Coins</p>
 
-            <h2>Shop</h2>
-            <button onclick="buyLuckUpgrade()">Buy Luck Upgrade (100 RNG Coins)</button>
-            <p id="luck-level">Luck Level: 1</p>
+            <div id="shop">
+                <h3>Shop</h3>
+                <button onclick="buyLuck()">Buy +1% Luck (100 Coins)</button>
+                <p id="luck-display">Current Luck Boost: 0%</p>
+            </div>
         </div>
     </div>
 
@@ -102,22 +111,27 @@
         ];
 
         let rngCoins = parseInt(localStorage.getItem("rngCoins")) || 0;
-        let luckLevel = parseInt(localStorage.getItem("luckLevel")) || 1;
+        let rollLog = JSON.parse(localStorage.getItem("rollLog")) || [];
+        let luckBoost = parseFloat(localStorage.getItem("luckBoost")) || 0;
 
         function rollDice() {
-            let rand = Math.random() * luckLevel;
+            let rand = Math.random();
             let accumulated = 0;
             let rarity;
-            
+
             for (let r of rarities) {
-                accumulated += r.chance;
+                accumulated += r.chance + (luckBoost / 100);
                 if (rand < accumulated) {
                     rarity = r;
                     break;
                 }
             }
-            
+
+            if (!rarity) rarity = rarities[0];
+
             rngCoins += rarity.coins;
+            rollLog.push(rarity.name);
+            localStorage.setItem("rollLog", JSON.stringify(rollLog));
             localStorage.setItem("rngCoins", rngCoins);
             updateDisplay(rarity);
         }
@@ -126,20 +140,34 @@
             document.getElementById("coins").innerText = `RNG Coins: ${rngCoins}`;
             document.getElementById("last-roll").innerText = `Last Roll: ${rarity.name}`;
             document.body.style.backgroundColor = rarity.color;
+            let logList = document.getElementById("log-list");
+            let newEntry = document.createElement("li");
+            newEntry.innerText = `Rolled: ${rarity.name}`;
+            logList.prepend(newEntry);
         }
 
-        function buyLuckUpgrade() {
+        function buyLuck() {
             if (rngCoins >= 100) {
                 rngCoins -= 100;
-                luckLevel += 1;
+                luckBoost += 1;
                 localStorage.setItem("rngCoins", rngCoins);
-                localStorage.setItem("luckLevel", luckLevel);
-                document.getElementById("luck-level").innerText = `Luck Level: ${luckLevel}`;
+                localStorage.setItem("luckBoost", luckBoost);
+                document.getElementById("luck-display").innerText = `Current Luck Boost: ${luckBoost}%`;
                 document.getElementById("coins").innerText = `RNG Coins: ${rngCoins}`;
             } else {
-                alert("Not enough RNG Coins!");
-                <p> By Daksh D.</p>
+                alert("Not enough coins!");
             }
+        }
+
+        function loadGameData() {
+            document.getElementById("coins").innerText = `RNG Coins: ${rngCoins}`;
+            document.getElementById("luck-display").innerText = `Current Luck Boost: ${luckBoost}%`;
+            let logList = document.getElementById("log-list");
+            rollLog.forEach(entry => {
+                let newEntry = document.createElement("li");
+                newEntry.innerText = `Rolled: ${entry}`;
+                logList.appendChild(newEntry);
+            });
         }
     </script>
 </body>
