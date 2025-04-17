@@ -20,10 +20,9 @@
             display: flex;
             justify-content: space-between;
             width: 90%;
-            margin-top: 20px;
         }
         #left-container, #right-container {
-            width: 30%;
+            width: 45%;
         }
         #log-container {
             border: 2px solid black;
@@ -31,12 +30,6 @@
             background-color: lightgray;
             max-height: 300px;
             overflow-y: auto;
-        }
-        #shop {
-            margin-top: 20px;
-            border: 2px solid black;
-            padding: 10px;
-            background-color: #f0f0f0;
         }
         button {
             padding: 10px 15px;
@@ -55,6 +48,7 @@
     <div id="header">
         <h1>RNG Dice Roll Game</h1>
         <button onclick="rollDice()">Roll</button>
+        <button onclick="buyLuck()">Buy Luck (100 Coins)</button>
         <p id="coins">RNG Coins: 0</p>
         <p id="last-roll">Last Roll: None</p>
     </div>
@@ -83,57 +77,69 @@
             <p><strong>Ethereal:</strong> 0.05% - 1500 RNG Coins</p>
             <p><strong>Omnipotent:</strong> 0.02% - 2000 RNG Coins</p>
             <p><strong>Beyond Reality:</strong> 0.001% - 5000 RNG Coins</p>
-
-            <div id="shop">
-                <h3>Shop</h3>
-                <button onclick="buyLuck()">Buy +1% Luck (100 Coins)</button>
-                <p id="luck-display">Current Luck Boost: 0%</p>
-            </div>
         </div>
     </div>
 
     <script>
         let rarities = [
-            { name: "Common", chance: 0.50, coins: 1, color: "gray" },
-            { name: "Uncommon", chance: 0.25, coins: 5, color: "green" },
-            { name: "Rare", chance: 0.15, coins: 10, color: "blue" },
-            { name: "Epic", chance: 0.10, coins: 20, color: "purple" },
-            { name: "Legendary", chance: 0.07, coins: 50, color: "orange" },
-            { name: "Mythical", chance: 0.05, coins: 100, color: "red" },
-            { name: "Divine", chance: 0.03, coins: 200, color: "gold" },
-            { name: "Transcendent", chance: 0.01, coins: 300, color: "cyan" },
-            { name: "Celestial", chance: 0.005, coins: 500, color: "pink" },
-            { name: "Cosmic", chance: 0.003, coins: 700, color: "silver" },
-            { name: "Astral", chance: 0.001, coins: 1000, color: "indigo" },
-            { name: "Ethereal", chance: 0.0005, coins: 1500, color: "violet" },
-            { name: "Omnipotent", chance: 0.0002, coins: 2000, color: "white" },
-            { name: "Beyond Reality", chance: 0.00001, coins: 5000, color: "black" }
+            { name: "Common", baseChance: 0.50, coins: 1, color: "gray" },
+            { name: "Uncommon", baseChance: 0.25, coins: 5, color: "green" },
+            { name: "Rare", baseChance: 0.15, coins: 10, color: "blue" },
+            { name: "Epic", baseChance: 0.10, coins: 20, color: "purple" },
+            { name: "Legendary", baseChance: 0.07, coins: 50, color: "orange" },
+            { name: "Mythical", baseChance: 0.05, coins: 100, color: "red" },
+            { name: "Divine", baseChance: 0.03, coins: 200, color: "gold" },
+            { name: "Transcendent", baseChance: 0.01, coins: 300, color: "cyan" },
+            { name: "Celestial", baseChance: 0.005, coins: 500, color: "pink" },
+            { name: "Cosmic", baseChance: 0.003, coins: 700, color: "silver" },
+            { name: "Astral", baseChance: 0.001, coins: 1000, color: "indigo" },
+            { name: "Ethereal", baseChance: 0.0005, coins: 1500, color: "violet" },
+            { name: "Omnipotent", baseChance: 0.0002, coins: 2000, color: "white" },
+            { name: "Beyond Reality", baseChance: 0.00001, coins: 5000, color: "black" }
         ];
 
         let rngCoins = parseInt(localStorage.getItem("rngCoins")) || 0;
         let rollLog = JSON.parse(localStorage.getItem("rollLog")) || [];
-        let luckBoost = parseFloat(localStorage.getItem("luckBoost")) || 0;
+        let luckMultiplier = parseFloat(localStorage.getItem("luckMultiplier")) || 1;
 
         function rollDice() {
-            let rand = Math.random();
+            let modifiedChances = rarities.map(r => {
+                let chance = r.baseChance;
+                if (r.name !== "Common") chance *= luckMultiplier;
+                return { ...r, chance };
+            });
+
+            let totalChance = modifiedChances.reduce((sum, r) => sum + r.chance, 0);
+            let rand = Math.random() * totalChance;
             let accumulated = 0;
             let rarity;
 
-            for (let r of rarities) {
-                accumulated += r.chance + (luckBoost / 100);
+            for (let r of modifiedChances) {
+                accumulated += r.chance;
                 if (rand < accumulated) {
                     rarity = r;
                     break;
                 }
             }
 
-            if (!rarity) rarity = rarities[0];
-
             rngCoins += rarity.coins;
             rollLog.push(rarity.name);
             localStorage.setItem("rollLog", JSON.stringify(rollLog));
             localStorage.setItem("rngCoins", rngCoins);
             updateDisplay(rarity);
+        }
+
+        function buyLuck() {
+            if (rngCoins >= 100) {
+                rngCoins -= 100;
+                luckMultiplier += 0.1;
+                localStorage.setItem("rngCoins", rngCoins);
+                localStorage.setItem("luckMultiplier", luckMultiplier);
+                alert(`Luck increased! Current multiplier: x${luckMultiplier.toFixed(2)}`);
+                document.getElementById("coins").innerText = `RNG Coins: ${rngCoins}`;
+            } else {
+                alert("Not enough RNG Coins to buy luck!");
+            }
         }
 
         function updateDisplay(rarity) {
@@ -146,27 +152,13 @@
             logList.prepend(newEntry);
         }
 
-        function buyLuck() {
-            if (rngCoins >= 100) {
-                rngCoins -= 100;
-                luckBoost += 1;
-                localStorage.setItem("rngCoins", rngCoins);
-                localStorage.setItem("luckBoost", luckBoost);
-                document.getElementById("luck-display").innerText = `Current Luck Boost: ${luckBoost}%`;
-                document.getElementById("coins").innerText = `RNG Coins: ${rngCoins}`;
-            } else {
-                alert("Not enough coins!");
-            }
-        }
-
         function loadGameData() {
             document.getElementById("coins").innerText = `RNG Coins: ${rngCoins}`;
-            document.getElementById("luck-display").innerText = `Current Luck Boost: ${luckBoost}%`;
             let logList = document.getElementById("log-list");
             rollLog.forEach(entry => {
                 let newEntry = document.createElement("li");
                 newEntry.innerText = `Rolled: ${entry}`;
-                logList.appendChild(newEntry);
+                logList.prepend(newEntry);
             });
         }
     </script>
